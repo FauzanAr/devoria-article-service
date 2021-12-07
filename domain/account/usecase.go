@@ -63,8 +63,6 @@ func (u *accountUsecaseImpl) generateBase64String(byteSize int) string {
 }
 
 func (u *accountUsecaseImpl) Register(ctx context.Context, params AccountRegistrationRequest) (resp response.Response) {
-	fmt.Println("len", len(u.generateBase64String(8)))
-	fmt.Println(u.globalIV)
 	_, err := u.repository.FindByEmail(ctx, params.Email)
 	if err == nil {
 		return response.Error(response.StatusConflicted, nil, exception.ErrConflicted)
@@ -137,7 +135,7 @@ func (u *accountUsecaseImpl) Login(ctx context.Context, params AccountAuthentica
 	claims.ExpiresAt = time.Now().Add(time.Hour * 24 * 1).Unix()
 
 	token, err := u.jsonWebToken.Sign(ctx, claims)
-	if err == nil {
+	if err != nil {
 		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
 	}
 
