@@ -17,7 +17,7 @@ var (
 // JSONWebToken is a collection of behavior of JSON Web Token.
 type JSONWebToken interface {
 	Sign(ctx context.Context, claims jwt.Claims) (tokenString string, err error)
-	Parse(ctx context.Context, tokenString string, claims jwt.Claims) (err error)
+	Parse(ctx context.Context, tokenString string) (tokenClaim map[string]interface{}, err error)
 }
 
 type jsonWebToken struct {
@@ -40,20 +40,21 @@ func (a *jsonWebToken) Sign(ctx context.Context, claims jwt.Claims) (tokenString
 }
 
 // Parse will parse the token string to bearer claims.
-func (a *jsonWebToken) Parse(ctx context.Context, tokenString string, claims jwt.Claims) (err error) {
+func (a *jsonWebToken) Parse(ctx context.Context, tokenString string) (tokenClaim map[string]interface{}, err error) {
 	// span, _ := apm.StartSpan(ctx, "JSONWebToken: Parse", "token.jwt")
 	// defer span.End()
-
+	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, a.keyFunc)
+
 	if err = a.checkError(err); err != nil {
 		return
 	}
 
 	if !token.Valid {
-		return ErrInvalidToken
+		return claims, ErrInvalidToken
 	}
 
-	return
+	return claims, nil
 }
 
 func (a *jsonWebToken) keyFunc(token *jwt.Token) (interface{}, error) {

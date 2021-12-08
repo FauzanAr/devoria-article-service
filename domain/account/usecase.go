@@ -18,7 +18,7 @@ import (
 type AccountUsecase interface {
 	Register(ctx context.Context, params AccountRegistrationRequest) (resp response.Response)
 	Login(ctx context.Context, params AccountAuthenticationRequest) (resp response.Response)
-	GetProfile(ctx context.Context) (resp response.Response)
+	GetProfile(ctx context.Context, email string) (resp response.Response)
 }
 
 type accountUsecaseImpl struct {
@@ -156,11 +156,14 @@ func (u *accountUsecaseImpl) Login(ctx context.Context, params AccountAuthentica
 
 	return response.Success(response.StatusOK, accountAuthenticationResponse)
 }
-func (u *accountUsecaseImpl) GetProfile(ctx context.Context) (resp response.Response) {
-	account, ok := ctx.Value(AccountContextKey{}).(Account)
-	if !ok {
+func (u *accountUsecaseImpl) GetProfile(ctx context.Context, email string) (resp response.Response) {
+
+	// account, ok := ctx.Value(AccountContextKey{}).(Account)
+	account, err := u.repository.FindByEmail(ctx, email)
+	if err != nil {
 		return response.Error(response.StatusUnauthorized, nil, exception.ErrUnauthorized)
 	}
 
 	return response.Success(response.StatusOK, account)
+	
 }

@@ -18,6 +18,7 @@ func NewBasicAuth(username, password string) RouteMiddleware {
 func (ba *BasicAuth) Verify(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
+
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return

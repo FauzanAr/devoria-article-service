@@ -3,7 +3,7 @@ package account
 import (
 	"encoding/json"
 	"net/http"
-
+	
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/sangianpatrick/devoria-article-service/middleware"
@@ -20,6 +20,7 @@ func NewAccountHTTPHandler(
 	basicAuthMiddleware middleware.RouteMiddleware,
 	validate *validator.Validate,
 	usecase AccountUsecase,
+	bearerAuthMiddleware middleware.RouteMiddleware,
 ) {
 	handler := &AccountHTTPHandler{
 		Validate: validate,
@@ -28,7 +29,7 @@ func NewAccountHTTPHandler(
 
 	router.HandleFunc("/v1/accounts/registration", basicAuthMiddleware.Verify(handler.Register)).Methods(http.MethodPost)
 	router.HandleFunc("/v1/accounts/login", basicAuthMiddleware.Verify(handler.Login)).Methods(http.MethodPost)
-
+	router.HandleFunc("/v1/accounts/profile", bearerAuthMiddleware.Verify(handler.GetProfile)).Methods(http.MethodGet)
 }
 
 func (handler *AccountHTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -75,4 +76,13 @@ func (handler *AccountHTTPHandler) Login(w http.ResponseWriter, r *http.Request)
 
 	resp = handler.Usecase.Login(ctx, params)
 	resp.JSON(w)
+}
+
+func (handler *AccountHTTPHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	var resp response.Response
+	var ctx = r.Context()
+	var email = r.Header.Get("userEmail")
+	resp = handler.Usecase.GetProfile(ctx, email)
+	resp.JSON(w)
+
 }
