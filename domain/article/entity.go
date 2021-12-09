@@ -22,7 +22,7 @@ type Article struct {
 	Content        string
 	Status         ArticleStatus
 	CreatedAt      time.Time
-	PublishedAt    *time.Time
+	PublishedAt    time.Time
 	LastModifiedAt *time.Time
 	Author         account.Account
 }

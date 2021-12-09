@@ -156,6 +156,7 @@ func (u *accountUsecaseImpl) Login(ctx context.Context, params AccountAuthentica
 
 	return response.Success(response.StatusOK, accountAuthenticationResponse)
 }
+
 func (u *accountUsecaseImpl) GetProfile(ctx context.Context, email string) (resp response.Response) {
 
 	// account, ok := ctx.Value(AccountContextKey{}).(Account)

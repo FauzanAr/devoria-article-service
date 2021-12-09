@@ -31,12 +31,13 @@ func (ba *BearerAuth) Verify(next http.HandlerFunc) http.HandlerFunc {
 		tokenString := ExtractToken(r)
 
 		claims, err := ba.jsonWebToken.Parse(ctx, tokenString)
-		email, _ := claims["email"].(string)
-		r.Header.Set("userEmail", email)
 
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 		}
+
+		email, _ := claims["email"].(string)
+		r.Header.Set("userEmail", email)
 		
 		next(w, r)
 	})

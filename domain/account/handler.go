@@ -3,7 +3,8 @@ package account
 import (
 	"encoding/json"
 	"net/http"
-	
+	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/sangianpatrick/devoria-article-service/middleware"
@@ -59,7 +60,7 @@ func (handler *AccountHTTPHandler) Login(w http.ResponseWriter, r *http.Request)
 	var resp response.Response
 	var params AccountAuthenticationRequest
 	var ctx = r.Context()
-
+	
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		resp = response.Error(response.StatusUnprocessabelEntity, nil, err)
@@ -82,6 +83,7 @@ func (handler *AccountHTTPHandler) GetProfile(w http.ResponseWriter, r *http.Req
 	var resp response.Response
 	var ctx = r.Context()
 	var email = r.Header.Get("userEmail")
+	fmt.Println("tes")
 	resp = handler.Usecase.GetProfile(ctx, email)
 	resp.JSON(w)
 
