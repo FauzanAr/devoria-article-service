@@ -3,6 +3,8 @@ package article
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -27,6 +29,7 @@ func NewArticleHTTPHandler(
 	}
 
 	router.HandleFunc("/v1/articles", bearerAuthMiddleware.Verify(handler.CreateArticle)).Methods(http.MethodPost)
+	router.HandleFunc("/v1/articles", bearerAuthMiddleware.Verify(handler.GetArticle)).Methods(http.MethodGet)
 }
 
 func (handler *ArticleHTTPHandler) CreateArticle(w http.ResponseWriter, r *http.Request) {
@@ -54,4 +57,18 @@ func (handler *ArticleHTTPHandler) CreateArticle(w http.ResponseWriter, r *http.
 
 	resp = handler.Usecase.CreateArticle(ctx, params)
 	resp.JSON(w)
+}
+
+func (handler *ArticleHTTPHandler) GetArticle(w http.ResponseWriter, r *http.Request) {
+
+	var resp response.Response
+	var ctx = r.Context()
+	ids, _ := r.URL.Query()["id"]
+	i, _ := strconv.ParseInt(ids[0], 10, 64)
+	ID := int64(i)
+
+	fmt.Println(ID)
+	resp = handler.Usecase.GetArticleByID(ctx, ID)
+	resp.JSON(w)
+
 }

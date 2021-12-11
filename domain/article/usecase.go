@@ -11,6 +11,7 @@ import (
 
 type ArticleUsecase interface {
 	CreateArticle(ctx context.Context, params CreateArticleRequest) (resp response.Response)
+	GetArticleByID(ctx context.Context, ID int64) (resp response.Response)
 	
 }
 
@@ -56,4 +57,15 @@ func (u *articleUsecaseImpl) CreateArticle(ctx context.Context, params CreateArt
 	
 
 	return response.Success(response.StatusCreated, createArticleResponse)
+}
+
+func (u *articleUsecaseImpl) GetArticleByID(ctx context.Context, ID int64) (resp response.Response) {
+
+	article, err := u.repository.FindByID(ctx, ID)
+	if err != nil {
+		return response.Error(response.StatusUnauthorized, nil, exception.ErrUnauthorized)
+	}
+
+	return response.Success(response.StatusOK, article)
+	
 }
