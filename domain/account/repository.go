@@ -57,7 +57,7 @@ func (r *accountRepositoryImpl) Save(ctx context.Context, account Account) (ID i
 }
 
 func (r *accountRepositoryImpl) Update(ctx context.Context, ID int64, updatedAccount Account) (err error) {
-	command := fmt.Sprintf(`UPDATE %s SET password = ?, firstName = ?, lastName = ?, lastModified = ? WHERE id = ?`, r.tableName)
+	command := fmt.Sprintf(`UPDATE %s SET password = ?, firstName = ?, lastName = ? WHERE id = ?`, r.tableName)
 	stmt, err := r.db.PrepareContext(ctx, command)
 	if err != nil {
 		log.Println(err)
@@ -71,7 +71,7 @@ func (r *accountRepositoryImpl) Update(ctx context.Context, ID int64, updatedAcc
 		*updatedAccount.Password,
 		updatedAccount.FirstName,
 		updatedAccount.LastName,
-		updatedAccount.LastModifiedAt,
+		ID,
 	)
 
 	if err != nil {

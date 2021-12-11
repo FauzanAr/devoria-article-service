@@ -19,6 +19,7 @@ type AccountUsecase interface {
 	Register(ctx context.Context, params AccountRegistrationRequest) (resp response.Response)
 	Login(ctx context.Context, params AccountAuthenticationRequest) (resp response.Response)
 	GetProfile(ctx context.Context, email string) (resp response.Response)
+	UpdateProfile(ctx context.Context, params AccountUpdateRequest) (resp response.Response)
 }
 
 type accountUsecaseImpl struct {
@@ -167,4 +168,26 @@ func (u *accountUsecaseImpl) GetProfile(ctx context.Context, email string) (resp
 
 	return response.Success(response.StatusOK, account)
 	
+}
+
+func (u *accountUsecaseImpl) UpdateProfile(ctx context.Context, params AccountUpdateRequest) (resp response.Response) {
+	encryptedPassword := u.crypto.Encrypt(params.Password, u.globalIV)
+	updatedAccount := Account{}
+	updatedAccount.Password = &encryptedPassword
+	updatedAccount.FirstName = params.FirstName
+	updatedAccount.LastName = params.LastName
+
+
+	err := u.repository.Update(ctx, params.ID, updatedAccount)
+	if err != nil {
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
+	}
+
+	// publish to kafke if availabe
+
+	editAccountResponse := EditAccountResponse{}
+	editAccountResponse.Ok = true
+	editAccountResponse.Message = "Profile Updated"
+
+	return response.Success(response.StatusCreated, editAccountResponse)
 }
