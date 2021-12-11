@@ -11,10 +11,10 @@ import (
 
 type ArticleRepository interface {
 	Save(ctx context.Context, article Article) (ID int64, err error)
-	// Update(ctx context.Context, ID int64, updatedArticle Article) (err error)
+	Update(ctx context.Context, ID int64, updatedArticle Article) (err error)
 	FindByID(ctx context.Context, ID int64) (article Article, err error)
 	FindMany(ctx context.Context) (bunchOfArticles []Article, err error)
-	// FindManySpecificProfile(ctx context.Context, articleID int64) (bunchOfArticles []Article, err error)
+	FindManySpecificProfile(ctx context.Context, userID int64) (bunchOfArticles []Article, err error)
 }
 
 type articleRepositoryImpl struct {
@@ -132,11 +132,88 @@ func (r *articleRepositoryImpl) FindMany(ctx context.Context) (bunchOfArticles [
 			err = exception.ErrNotFound
 			return
 		} 
-		fmt.Println(article)
 		bunchOfArticles = append(bunchOfArticles, article)
 	}
 
-	fmt.Println("check out")
+
+	return
+}
+
+func (r *articleRepositoryImpl) FindManySpecificProfile(ctx context.Context, userID int64) (bunchOfArticles []Article, err error) {
+	query := fmt.Sprintf(`SELECT ar.id, ar.title, ar.subtitle, ar.content, ar.status, ar.publishedAt, ac.id, ac.firstName, ac.lastName, ac.email FROM %s ar 
+	LEFT JOIN Account ac
+	ON ac.id = ar.authorId
+	WHERE ar.authorId = ?`, r.tableName)
+	
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		log.Println(err)
+		err = exception.ErrInternalServer
+		return
+	}
+	defer stmt.Close()
+
+	rows, _ := stmt.QueryContext(ctx, userID)
+	for rows.Next() {
+		article := Article{}
+
+		err = rows.Scan(
+			&article.ID,
+			&article.Title,
+			&article.Subtitle,
+			&article.Content,
+			&article.Status,
+			&article.PublishedAt,
+			&article.Author.ID,
+			&article.Author.FirstName,
+			&article.Author.LastName,
+			&article.Author.Email,
+		)
+		if err != nil {
+			log.Println(err)
+			err = exception.ErrNotFound
+			return
+		} 
+		bunchOfArticles = append(bunchOfArticles, article)
+	}
+
+	if len(bunchOfArticles) == 0 {
+		log.Println(err)
+		err = exception.ErrNotFound
+	}
+	
+	return
+}
+
+func (r *articleRepositoryImpl) Update(ctx context.Context, ID int64, updatedArticle Article) (err error) {
+	command := fmt.Sprintf(`UPDATE %s SET title = ?, subtitle = ?, content = ? WHERE id = ?`, r.tableName)
+	stmt, err := r.db.PrepareContext(ctx, command)
+	if err != nil {
+		log.Println(err)
+		err = exception.ErrInternalServer
+		return
+	}
+	defer stmt.Close()
+
+	result, err := stmt.ExecContext(
+		ctx,
+		updatedArticle.Title,
+		updatedArticle.Subtitle,
+		updatedArticle.Content,
+		ID,
+	)
+
+	if err != nil {
+		log.Println(err)
+		err = exception.ErrInternalServer
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected < 1 {
+		err = exception.ErrNotFound
+		return
+	}
 
 	return
 }

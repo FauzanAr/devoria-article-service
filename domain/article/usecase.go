@@ -13,6 +13,8 @@ type ArticleUsecase interface {
 	CreateArticle(ctx context.Context, params CreateArticleRequest) (resp response.Response)
 	GetArticleByID(ctx context.Context, ID int64) (resp response.Response)
 	GetArticles(ctx context.Context) (resp response.Response)
+	GetArticlesByUserID(ctx context.Context, userID int64) (resp response.Response) 
+	UpdateArticle(ctx context.Context, ID int64, params EditArticleRequest) (resp response.Response)
 	
 }
 
@@ -64,7 +66,7 @@ func (u *articleUsecaseImpl) GetArticleByID(ctx context.Context, ID int64) (resp
 
 	article, err := u.repository.FindByID(ctx, ID)
 	if err != nil {
-		return response.Error(response.StatusUnauthorized, nil, exception.ErrUnauthorized)
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
 	}
 
 	return response.Success(response.StatusOK, article)
@@ -75,9 +77,40 @@ func (u *articleUsecaseImpl) GetArticles(ctx context.Context) (resp response.Res
 
 	articles, err := u.repository.FindMany(ctx)
 	if err != nil {
-		return response.Error(response.StatusUnauthorized, nil, exception.ErrUnauthorized)
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
 	}
 	
 	return response.Success(response.StatusOK, articles)
 	
 }
+
+func (u *articleUsecaseImpl) GetArticlesByUserID(ctx context.Context, userID int64) (resp response.Response) {
+
+	articles, err := u.repository.FindManySpecificProfile(ctx, userID)
+	if err != nil {
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
+	}
+	
+	return response.Success(response.StatusOK, articles)
+	
+}
+
+func (u *articleUsecaseImpl) UpdateArticle(ctx context.Context, ID int64, params EditArticleRequest) (resp response.Response) {
+	updatedArticle := Article{}
+	updatedArticle.Title = params.Title
+	updatedArticle.Subtitle = params.Subtitle
+	updatedArticle.Content = params.Content
+
+	err := u.repository.Update(ctx, ID, updatedArticle)
+	if err != nil {
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
+	}
+
+	editArticleResponse := EditArticleResponse{}
+	editArticleResponse.Ok = true
+	editArticleResponse.Message = "Article Updated"
+	
+	return response.Success(response.StatusOK, editArticleResponse)
+	
+}
+
