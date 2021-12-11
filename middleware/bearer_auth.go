@@ -34,6 +34,7 @@ func (ba *BearerAuth) Verify(next http.HandlerFunc) http.HandlerFunc {
 
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
 		}
 
 		email, _ := claims["email"].(string)
